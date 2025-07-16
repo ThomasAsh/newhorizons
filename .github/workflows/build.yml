@@ -1,4 +1,3 @@
-gh workflow create build.yml --repo ThomasAsh/newhorizons --label "Build New Horizons Launcher" --yaml << 'EOF'
 name: Build New Horizons Launcher
 on:
   push:
@@ -29,4 +28,3 @@ jobs:
       with:
         name: NewHorizons-Launcher-${{ matrix.os }}
         path: out/make
-EOF
