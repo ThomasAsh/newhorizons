@@ -39,7 +39,7 @@ jobs:
         run: pkg ./setup_launcher.js --output ./app/distros/NewHorizonsLauncher.exe --targets node18-win-x64
 
       - name: Upload Windows launcher exe artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NewHorizonsLauncher
           path: ./app/distros/NewHorizonsLauncher.exe
