@@ -1,4 +1,4 @@
-name: Update Modlist
+name: Update Modlist and Build Launcher
 
 on:
   schedule:
@@ -16,25 +16,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18  # or your preferred stable Node version
 
       - name: Install dependencies
         run: npm install
-        working-directory: .
 
       - name: Run modlist setup script
         run: node setup_launcher.js
-        working-directory: .
 
       - name: Commit and push updated modlist JSON
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ./app/distros/NewHorizons.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Automated modlist update"
-            git push
-          else
-            echo "No changes to commit"
-          fi
-        working-directory: .
+          git diff --quiet && echo "No changes to commit" || git commit -m "Automated modlist update"
+          git push
+
+      - name: Install pkg to build executable
+        run: npm install -g pkg
+
+      - name: Build Windows executable
+        run: pkg ./setup_launcher.js --output ./app/distros/NewHorizonsLauncher.exe --targets node18-win-x64
+
+      - name: Upload Windows launcher exe artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: NewHorizonsLauncher
+          path: ./app/distros/NewHorizonsLauncher.exe
