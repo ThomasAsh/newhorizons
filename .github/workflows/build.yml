@@ -1,4 +1,4 @@
-name: Update Modlist
+name: Setup Launcher
 
 on:
   schedule:
