@@ -1,30 +1,33 @@
-name: Build New Horizons Launcher
+name: Update Modlist
+
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: '0 3 * * *'  # Runs daily at 03:00 UTC; adjust as needed
+  workflow_dispatch:    # Allows manual triggering from GitHub UI
 
 jobs:
-  build:
+  update-modlist:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: 18  # or your preferred stable Node version
+
       - name: Install dependencies
         run: npm install
-      - name: Rebrand launcher name
+
+      - name: Run modlist setup script
+        run: node setup_launcher.js
+
+      - name: Commit and push updated modlist JSON
         run: |
-          npx json -I -f package.json -e "this.name='new-horizons-launcher'; this.productName='New Horizons Launcher';"
-      - name: Build distributables
-        run: |
-          npm run make
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: NewHorizons-Launcher-${{ matrix.os }}
-          path: out/make
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./app/distros/NewHorizons.json
+          git diff --quiet && echo "No changes to commit" || git commit -m "Automated modlist update"
+          git push
