@@ -1,9 +1,9 @@
-name: update-modlist
+name: Update Modlist
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # daily at midnight UTC, adjust as needed
+    - cron: '0 3 * * *'  # Runs daily at 03:00 UTC; adjust as needed
+  workflow_dispatch:    # Allows manual triggering from GitHub UI
 
 jobs:
   update-modlist:
@@ -16,21 +16,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./  # root of repo after checkout
+        working-directory: .
 
       - name: Run modlist setup script
         run: node setup_launcher.js
-        working-directory: ./  # root of repo
+        working-directory: .
 
       - name: Commit and push updated modlist JSON
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ./app/distros/NewHorizons.json
-          git diff --cached --quiet || git commit -m "Update modlist JSON [skip ci]"
-          git push
-        working-directory: ./  # root of repo
+          if ! git diff --cached --quiet; then
+            git commit -m "Automated modlist update"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+        working-directory: .
