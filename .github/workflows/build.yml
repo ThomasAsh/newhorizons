@@ -2,11 +2,11 @@ name: Update Modlist and Build Launcher
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Runs daily at 03:00 UTC; adjust as needed
-  workflow_dispatch:    # Allows manual triggering from GitHub UI
+    - cron: '0 3 * * *'  # daily at 03:00 UTC
+  workflow_dispatch:      # manual trigger
 
 jobs:
-  update-modlist:
+  update-and-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,30 +16,31 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18  # or your preferred stable Node version
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run modlist setup script
+      - name: Generate modlist JSON
         run: node setup_launcher.js
+
+      - name: Build Windows executable
+        run: npm run build-win
 
       - name: Commit and push updated modlist JSON
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./app/distros/NewHorizons.json package-lock.json
-          git diff --quiet && echo "No changes to commit" || git commit -m "Automated modlist update"
-          git push
+          git add ./app/distros/NewHorizons.json ./build/NewHorizons.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated modlist update and build"
+            git push origin main
+          fi
 
-      - name: Install pkg to build executable
-        run: npm install -g pkg
-
-      - name: Build Windows executable
-        run: pkg ./setup_launcher.js --output ./app/distros/NewHorizonsLauncher.exe --targets node18-win-x64
-
-      - name: Upload Windows launcher exe artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Windows executable artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: NewHorizonsLauncher
-          path: ./app/distros/NewHorizonsLauncher.exe
+          name: NewHorizonsLauncher-Windows
+          path: ./build/NewHorizonsLauncher.exe
